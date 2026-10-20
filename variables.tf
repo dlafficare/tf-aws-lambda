@@ -18,14 +18,28 @@ variable "performance_profile" {
   }
 }
 
-variable "deployed_service" {
-  description = "Name of the microservice whose code is deployed in this function. Must match the microservice name in the Console: its pipeline uploads <name>/<name>-latest.zip to the artifacts bucket."
+variable "source_code" {
+  description = "Inline source code of the function (single file). When set, deployed_service and artifacts_bucket are ignored."
   type        = string
+  default     = ""
+}
+
+variable "source_filename" {
+  description = "File name of the inline source code (e.g. index.mjs for Node.js ES modules, index.py for Python)."
+  type        = string
+  default     = "index.mjs"
+}
+
+variable "deployed_service" {
+  description = "Name of the microservice whose code is deployed in this function. Must match the microservice name in the Console: its pipeline uploads <name>/<name>-latest.zip to the artifacts bucket. Used when source_code is empty."
+  type        = string
+  default     = ""
 }
 
 variable "artifacts_bucket" {
-  description = "The versioned S3 bucket where microservice pipelines upload their packages."
+  description = "The versioned S3 bucket where microservice pipelines upload their packages. Used when source_code is empty."
   type        = string
+  default     = ""
 }
 
 variable "runtime" {

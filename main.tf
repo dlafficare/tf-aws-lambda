@@ -18,6 +18,8 @@ locals {
     }
   }
 
+  # Code comes either inline from the Console form or from the artifacts bucket
+  inline       = var.source_code != ""
   artifact_key = "${var.deployed_service}/${var.deployed_service}-latest.zip"
 
   tags = merge(
@@ -33,8 +35,23 @@ locals {
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
+# Inline code: packaged by Terraform at plan time
+data "archive_file" "inline" {
+  count = local.inline ? 1 : 0
+
+  type        = "zip"
+  output_path = "${path.module}/.build/${var.service_name}.zip"
+
+  source {
+    content  = var.source_code
+    filename = var.source_filename
+  }
+}
+
 # Latest package uploaded by the microservice pipeline: a new version triggers a code update
 data "aws_s3_object" "package" {
+  count = local.inline ? 0 : 1
+
   bucket = var.artifacts_bucket
   key    = local.artifact_key
 }
@@ -97,9 +114,12 @@ resource "aws_lambda_function" "main" {
   runtime       = var.runtime
   handler       = var.handler
 
-  s3_bucket         = var.artifacts_bucket
-  s3_key            = local.artifact_key
-  s3_object_version = data.aws_s3_object.package.version_id
+  filename         = local.inline ? data.archive_file.inline[0].output_path : null
+  source_code_hash = local.inline ? data.archive_file.inline[0].output_base64sha256 : null
+
+  s3_bucket         = local.inline ? null : var.artifacts_bucket
+  s3_key            = local.inline ? null : local.artifact_key
+  s3_object_version = local.inline ? null : data.aws_s3_object.package[0].version_id
 
   memory_size = local.lambda_config[var.performance_profile].memory_size
   timeout     = local.lambda_config[var.performance_profile].timeout

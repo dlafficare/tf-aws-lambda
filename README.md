@@ -14,8 +14,10 @@ Part of the Mia-Platform Console demo for AWS: the module is consumed by a Softw
 |------|-------------|
 | `service_name` | The name of the service. Used for Lambda function naming. |
 | `performance_profile` | The performance tier selected by the developer (sandbox, development, production). Memory, timeout and log retention are automatically configured based on this profile. |
-| `deployed_service` | Name of the microservice whose code is deployed in this function. Must match the microservice name in the Console: its pipeline uploads <name>/<name>-latest.zip to the artifacts bucket. |
-| `artifacts_bucket` | The versioned S3 bucket where microservice pipelines upload their packages. |
+| `source_code` | Inline source code of the function (single file). When set, deployed_service and artifacts_bucket are ignored. |
+| `source_filename` | File name of the inline source code (e.g. index.mjs for Node.js ES modules, index.py for Python). |
+| `deployed_service` | Name of the microservice whose code is deployed in this function. Must match the microservice name in the Console: its pipeline uploads <name>/<name>-latest.zip to the artifacts bucket. Used when source_code is empty. |
+| `artifacts_bucket` | The versioned S3 bucket where microservice pipelines upload their packages. Used when source_code is empty. |
 | `runtime` | The Lambda runtime. |
 | `handler` | The function entrypoint in your code. |
 | `environment_variables` | Environment variables passed to the function, as a JSON object (e.g. {"TABLE_NAME": "ref:counter.table_name"}). |
